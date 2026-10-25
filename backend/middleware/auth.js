@@ -1,14 +1,18 @@
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 
 // Reads the "token" cookie, verifies it and loads the user into req.user.
 export async function protect(req, res, next) {
+  let id;
   try {
-    const { id } = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
-    req.user = await User.findById(id);
+    ({ id } = jwt.verify(req.cookies?.token, process.env.JWT_SECRET));
+    if (!mongoose.isObjectIdOrHexString(id)) throw new Error("Invalid user ID");
   } catch {
-    // missing or invalid token: req.user stays undefined
+    return res.status(401).json({ message: "Please log in" });
   }
+  // Database failures reach the error handler instead of being reported as invalid credentials.
+  req.user = await User.findById(id);
   if (!req.user) return res.status(401).json({ message: "Please log in" });
   next();
 }

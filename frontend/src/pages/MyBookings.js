@@ -1,8 +1,5 @@
-// Member 3: list (GET /api/bookings/mine), cancel, pay, review.
-import React from "react";
-
-const e = React.createElement;
-
+import { e } from "../components/ui.js";
+import BookingList from "../components/BookingList.js";
 export default function MyBookings() {
-  return e("div", null, e("h2", null, "My bookings"), e("p", { className: "text-muted" }, "Coming soon."));
+  return e(BookingList, { role: "customer", path: "/api/bookings/mine", title: "My bookings" });
 }

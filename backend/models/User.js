@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
 
     // Professional only
     approvalStatus: { type: String, enum: ["pending", "approved", "rejected"] },
-    experienceYears: Number,
+    experienceYears: { type: Number, min: 0 },
     services: [
       {
         _id: false,

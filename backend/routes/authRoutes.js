@@ -7,7 +7,7 @@ const router = Router();
 router.post("/auth/register", ctrl.register);
 router.post("/auth/register-pro", ctrl.registerPro);
 router.post("/auth/login", ctrl.login);
-router.post("/auth/logout", protect, ctrl.logout);
+router.post("/auth/logout", ctrl.logout);
 router.get("/auth/me", protect, ctrl.me);
 
 router.get("/admin/pros", protect, allow("admin"), ctrl.listPros);

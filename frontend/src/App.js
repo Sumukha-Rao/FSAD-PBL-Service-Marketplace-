@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext.js";
 import Home from "./pages/Home.js";
@@ -26,6 +26,7 @@ const links = {
 function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState("");
   const pending = user && user.approvalStatus && user.approvalStatus !== "approved";
 
   return e(
@@ -38,7 +39,8 @@ function Navbar() {
       links[user ? user.role : "guest"].map(([to, label]) => e(Link, { key: to, className: "nav-link", to }, label))
     ),
     user && e("span", { className: "navbar-text me-3" }, user.name + (pending ? " (" + user.approvalStatus + ")" : "")),
-    user && e("button", { className: "btn btn-sm btn-outline-light", onClick: () => logout().then(() => navigate("/")) }, "Logout")
+    user && e("button", { className: "btn btn-sm btn-outline-light", onClick: () => { setError(""); logout().then(() => navigate("/")).catch((err) => setError(err.message)); } }, "Logout"),
+    error && e("span", { role: "alert", className: "text-warning ms-2" }, error)
   );
 }
 
