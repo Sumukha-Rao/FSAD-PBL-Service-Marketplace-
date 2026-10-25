@@ -11,7 +11,11 @@ const serviceSchema = new mongoose.Schema(
     maxPrice: { type: Number, required: true, min: 1 },
     isActive: { type: Boolean, default: true }
   },
-  { timestamps: true }
+  { timestamps: true, optimisticConcurrency: true }
 );
+
+serviceSchema.pre("validate", function () {
+  if (this.maxPrice < this.minPrice) this.invalidate("maxPrice", "Maximum price must be at least minimum price");
+});
 
 export default mongoose.model("Service", serviceSchema);

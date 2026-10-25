@@ -7,7 +7,7 @@ The full design is in [prd.md](./prd.md).
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 22.12+ or 24 LTS
 - Docker Desktop (for MongoDB), or a local MongoDB install
 
 ## Run it
@@ -18,14 +18,15 @@ docker compose up -d
 
 # 2. Backend (http://localhost:5000)
 cd backend
-npm install
+npm ci
 cp .env.example .env
+# Edit .env: set a private random JWT_SECRET and your own ADMIN_PASSWORD.
 npm run seed        # creates the admin account and 6 services
 npm run dev
 
 # 3. Frontend (http://localhost:5173), in a second terminal
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -53,8 +54,40 @@ frontend/
   src/pages/           one file per page
 ```
 
-Every API route is already wired up. Unfinished controllers answer `501 TODO: ...`, and
-unfinished pages show "Coming soon". Replace them with real code in your feature branch.
+All three member workflows are implemented:
+
+- Customers browse active services by category, book a future date and slot, see the assigned
+  professional and price, cancel before the booking day, pay after completion, and review once.
+- Professionals select services and prices, PIN codes and working days. Once approved, they can
+  view jobs, start and complete them, decline before the booking day, and record cash received.
+- Admins approve professionals, create/edit/deactivate services, and view all bookings. The admin
+  catalog also shows inactive services through `GET /api/admin/services`.
+
+Assignment filters eligible professionals, ranks them by daily workload, and retries another
+candidate when MongoDB's unique reservation index detects a competing booking. Declines use the
+same assignment rules and cancel when no replacement is available. Dates and slots use IST.
+The backend waits for the reservation index before accepting requests.
+
+To try the workflow, seed the catalog/admin, register a professional, configure their profile,
+and approve them from the admin account. Register a customer in a separate browser session
+and book a service for a PIN code and weekday covered by that professional.
+
+## Validation
+
+With MongoDB running:
+
+```bash
+cd backend
+npm test
+cd ../frontend
+npm run build
+```
+
+The API integration tests start the real server in a child process with an isolated, temporary
+MongoDB database and delete only that database after the run. Set `TEST_MONGO_URI` if MongoDB is
+not at `mongodb://127.0.0.1:27017`. The tests cover catalog/profile validation, authorization,
+assignment eligibility and fairness, concurrent reservations, cancellation, decline/reassignment,
+status transitions, competing payment methods, and one-time reviews.
 
 ## Who owns what
 
@@ -86,3 +119,19 @@ git push -u origin feat/auth
 
 Then open a pull request into `main`. One teammate reviews before merging. Never commit `.env`
 or `node_modules/`.
+
+## Configuration notes
+
+Set `JWT_SECRET` and `ADMIN_PASSWORD` before starting/seeding; the example placeholders are
+rejected. Production HTTPS deployments should set `NODE_ENV=production` to use Secure cookies.
+The Docker database port is bound to localhost. Registration normalizes email addresses and
+rejects passwords beyond bcrypt's 72-byte limit rather than silently truncating them.
+
+A professional approved in another session can use **Refresh bookings** on the jobs page;
+the API checks the current approval status. Concurrent admin edits return a conflict instead
+of overwriting another edit and potentially invalidating the service price range.
+
+Reviews are stored on bookings, while professional rating totals are updated in a separate
+write. With the PRD's standalone MongoDB setup, a database interruption between those writes
+can leave totals stale; rebuild them from booking reviews before using aggregate ratings for
+production decisions. Normal requests and concurrent duplicate reviews are covered by tests.

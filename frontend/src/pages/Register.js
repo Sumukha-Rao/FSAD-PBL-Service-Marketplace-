@@ -12,16 +12,18 @@ export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", experienceYears: "" });
   const [isPro, setIsPro] = useState(false);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
+    setError(""); setBusy(true);
     const url = isPro ? "/api/auth/register-pro" : "/api/auth/register";
     try {
-      setUser(await api(url, { method: "POST", body: form }));
+      setUser(await api(url, { method: "POST", body: { ...form, experienceYears: Number(form.experienceYears || 0) } }));
       navigate("/");
     } catch (err) {
       setError(err.message);
-    }
+    } finally { setBusy(false); }
   }
 
   const input = (name, type) =>
@@ -29,6 +31,8 @@ export default function Register() {
       className: "form-control mb-2",
       type,
       placeholder: name,
+      "aria-label": name,
+      ...(name === "experienceYears" ? { min: 0, step: "any" } : {}),
       required: true,
       value: form[name],
       onChange: (event) => setForm({ ...form, [name]: event.target.value })
@@ -50,6 +54,6 @@ export default function Register() {
       " Join as a professional"
     ),
     isPro && input("experienceYears", "number"),
-    e("button", { className: "btn btn-primary" }, "Register")
+    e("button", { className: "btn btn-primary", disabled: busy }, busy ? "Registering…" : "Register")
   );
 }

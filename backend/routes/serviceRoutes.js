@@ -4,6 +4,7 @@ import * as ctrl from "../controllers/serviceController.js";
 
 const router = Router();
 
+router.get("/admin/services", protect, allow("admin"), ctrl.adminServices);
 router.get("/services", ctrl.listServices);
 router.get("/services/:id", ctrl.getService);
 router.post("/services", protect, allow("admin"), ctrl.createService);
