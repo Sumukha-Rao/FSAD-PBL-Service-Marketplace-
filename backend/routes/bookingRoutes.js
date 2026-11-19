@@ -1,8 +1,14 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { protect, allow } from "../middleware/auth.js";
 import * as ctrl from "../controllers/bookingController.js";
 
 const router = Router();
+
+router.param("id", (req, res, next, id) => {
+  if (!mongoose.isObjectIdOrHexString(id)) return res.status(400).json({ message: "Invalid booking id" });
+  next();
+});
 
 router.use("/jobs", protect, allow("professional"), (req, res, next) => {
   if (req.user.approvalStatus !== "approved") return res.status(403).json({ message: "Professional approval required" });

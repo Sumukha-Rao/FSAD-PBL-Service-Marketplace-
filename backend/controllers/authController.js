@@ -16,8 +16,8 @@ function sendToken(res, user, status = 200) {
 async function createUser(req, res, extra) {
   const { name, email, password, phone } = req.body ?? {};
   if ([name, email, password, phone].some((value) => typeof value !== "string" || !value.trim()) ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || Buffer.byteLength(password, "utf8") > 72) {
-    return res.status(400).json({ message: "Provide name, valid email, phone and a password of at most 72 UTF-8 bytes" });
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || password.length < 8 || Buffer.byteLength(password, "utf8") > 72) {
+    return res.status(400).json({ message: "Provide name, valid email, phone and a password of 8 characters to 72 UTF-8 bytes" });
   }
   const normalizedEmail = email.trim().toLowerCase();
   if (await User.exists({ email: normalizedEmail })) {
